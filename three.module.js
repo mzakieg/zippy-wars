@@ -1,1 +1,0 @@
-// Placeholder: Download from https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js
