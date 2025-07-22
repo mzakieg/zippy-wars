@@ -6,9 +6,33 @@
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
     canvas { display: block; }
+    #controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 10;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      background: #fff;
+      color: #000;
+      border-radius: 10px;
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
+  <div id="controls">
+    <button onclick="moveZippy('left')">←</button>
+    <button onclick="moveZippy('right')">→</button>
+    <button onclick="moveZippy('up')">↑</button>
+    <button onclick="moveZippy('down')">↓</button>
+    <button onclick="shoot()">🔥</button>
+  </div>
+
   <script src="three.min.js"></script>
   <script src="OrbitControls.js"></script>
   <script src="game.js"></script>
