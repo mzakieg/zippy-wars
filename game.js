@@ -1,112 +1,101 @@
-
-import * as THREE from './three.module.js';
-import { OrbitControls } from './OrbitControls.js';
-
 let scene, camera, renderer, zippy, controls;
-let bullets = [], enemies = [], health = 100, score = 0;
+let bullets = [];
+let enemies = [];
 
 init();
 animate();
 
 function init() {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 5, 10);
+  scene.background = new THREE.Color(0x111111);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.z = 10;
+  camera.position.y = 5;
+
+  renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  const light = new THREE.DirectionalLight(0xffffff, 1);
-  light.position.set(5, 10, 7.5);
-  scene.add(light);
-
-  const ground = new THREE.Mesh(
+  // أرضية
+  const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(100, 100),
-    new THREE.MeshStandardMaterial({ color: 0x222222 })
+    new THREE.MeshBasicMaterial({ color: 0x333333, side: THREE.DoubleSide })
   );
-  ground.rotation.x = -Math.PI / 2;
-  scene.add(ground);
+  plane.rotation.x = Math.PI / 2;
+  scene.add(plane);
 
-  zippy = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 2, 1),
-    new THREE.MeshStandardMaterial({ color: 0xffffff })
-  );
+  // ZIPPY - الحمار الوحشي
+  const geometry = new THREE.BoxGeometry(1, 2, 1);
+  const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  zippy = new THREE.Mesh(geometry, material);
   zippy.position.y = 1;
   scene.add(zippy);
 
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.enablePan = false;
-  controls.enableZoom = false;
+  // إضاءة
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(10, 20, 10);
+  scene.add(light);
 
-  document.addEventListener('keydown', handleKey);
-  document.addEventListener('click', shoot);
+  // Controls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target = zippy.position;
 
-  spawnEnemy();
-  setInterval(spawnEnemy, 3000);
+  spawnEnemies();
 }
 
-function handleKey(e) {
+function spawnEnemies() {
+  for (let i = 0; i < 5; i++) {
+    const enemy = new THREE.Mesh(
+      new THREE.SphereGeometry(0.7, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    );
+    enemy.position.set(
+      Math.random() * 50 - 25,
+      1,
+      Math.random() * 50 - 25
+    );
+    scene.add(enemy);
+    enemies.push(enemy);
+  }
+}
+
+function moveZippy(direction) {
   const speed = 0.5;
-  if (e.key === 'w') zippy.position.z -= speed;
-  if (e.key === 's') zippy.position.z += speed;
-  if (e.key === 'a') zippy.position.x -= speed;
-  if (e.key === 'd') zippy.position.x += speed;
+  if (direction === "left") zippy.position.x -= speed;
+  if (direction === "right") zippy.position.x += speed;
+  if (direction === "up") zippy.position.z -= speed;
+  if (direction === "down") zippy.position.z += speed;
 }
 
 function shoot() {
   const bullet = new THREE.Mesh(
-    new THREE.SphereGeometry(0.1, 8, 8),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    new THREE.SphereGeometry(0.2, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffff00 })
   );
   bullet.position.copy(zippy.position);
-  bullet.direction = new THREE.Vector3(0, 0, -1);
-  bullets.push(bullet);
+  bullet.userData.velocity = new THREE.Vector3(0, 0, -1);
   scene.add(bullet);
-}
-
-function spawnEnemy() {
-  const enemy = new THREE.Mesh(
-    new THREE.SphereGeometry(1, 16, 16),
-    new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-  );
-  enemy.position.set(Math.random()*40-20, 1, -30);
-  enemies.push(enemy);
-  scene.add(enemy);
+  bullets.push(bullet);
 }
 
 function animate() {
   requestAnimationFrame(animate);
 
-  bullets.forEach((b, i) => {
-    b.position.add(b.direction.clone().multiplyScalar(1));
-    if (b.position.z < -100) {
-      scene.remove(b);
-      bullets.splice(i, 1);
-    }
-  });
+  bullets.forEach((b, index) => {
+    b.position.add(b.userData.velocity.clone().multiplyScalar(0.5));
 
-  enemies.forEach((enemy, i) => {
-    enemy.position.z += 0.1;
-    if (enemy.position.distanceTo(zippy.position) < 1.5) {
-      health -= 10;
-      scene.remove(enemy);
-      enemies.splice(i, 1);
-      if (health <= 0) alert('Game Over');
-    }
-  });
-
-  bullets.forEach((b, bi) => {
-    enemies.forEach((e, ei) => {
+    // تصادم مع الأعداء
+    enemies.forEach((e, i) => {
       if (b.position.distanceTo(e.position) < 1) {
         scene.remove(e);
+        enemies.splice(i, 1);
         scene.remove(b);
-        enemies.splice(ei, 1);
-        bullets.splice(bi, 1);
-        score += 10;
+        bullets.splice(index, 1);
       }
     });
   });
 
+  controls.update();
   renderer.render(scene, camera);
 }
