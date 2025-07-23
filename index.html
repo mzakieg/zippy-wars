@@ -1,5 +1,44 @@
-zippy-wars/
-├── index.html
-├── game.js
-├── three.min.js
-└── OrbitControls.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZIPPY WARS</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    #controls {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #555;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button onclick="move('left')">⬅️</button>
+    <button onclick="move('right')">➡️</button>
+    <button onclick="move('forward')">⬆️</button>
+    <button onclick="move('backward')">⬇️</button>
+    <button onclick="shoot()">🔫</button>
+  </div>
+
+  <script src="three.min.js"></script>
+  <script src="OrbitControls.js"></script>
+  <script src="game.js" type="module"></script>
+</body>
+</html>
